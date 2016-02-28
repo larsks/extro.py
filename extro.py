@@ -23,7 +23,7 @@ produce the ordering:
 
     task2 task3 task1
 
-If `task2/.deps/provides` contains `vpn`, then `task1/.requires` could
+If `task2/.deps/provides` contains `vpn`, then `task1/.deps/requires` could
 contain `vpn` instead of `task1` and the ordering would be the same.
 
 **NOTE**
@@ -40,13 +40,29 @@ contain `vpn` instead of `task1` and the ordering would be the same.
 '''
 
 __author__ = 'Lars Kellogg-Stedman <lars@oddbit.com>'
+__version__ = '0.1'
 
+import sys
 import argparse
-import toposort
 import logging
-from pathlib2 import Path
 
-LOG = logging.getLogger('dirorder')
+# the following allows us to use 'pydoc' even when missing
+# the requried modules.  this also allows us to import __version__
+# in setup.py.
+try:
+    import toposort
+    has_toposort = True
+except ImportError:
+    has_toposort = False
+
+try:
+    from pathlib2 import Path
+    has_path = True
+except ImportError:
+    Path = None
+    has_path = False
+
+LOG = logging.getLogger(__name__)
 
 
 def parse_args():
@@ -67,6 +83,10 @@ def parse_args():
 def main():
     args = parse_args()
     logging.basicConfig(level=args.loglevel)
+
+    if has_path is False or has_toposort is False:
+        LOG.error('Your python environment is missing required modules')
+        sys.exit(1)
 
     dirs = {}
 
